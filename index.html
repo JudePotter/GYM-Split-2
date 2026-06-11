@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Gym Split" />
+  <meta name="theme-color" content="#111111" />
+  <meta name="description" content="PJMJ Training System — Gym Split" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <title>Gym Split</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    :root {
+      --bg: #111111;
+      --bg2: #161616;
+      --bg3: #1a1a1a;
+      --border: #1e1e1e;
+      --border2: #2a2a2a;
+      --gold: #D4A017;
+      --cream: #F2EDE4;
+      --muted: #888;
+      --dim: #555;
+      --dim2: #444;
+      --red: #e05252;
+      --font: 'JetBrains Mono', 'Courier New', monospace;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--cream);
+      font-family: var(--font);
+      min-height: 100dvh;
+      overscroll-behavior: none;
+    }
+
+    /* ── HEADER ── */
+    #app-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding: calc(var(--safe-top) + 14px) 16px 14px;
+    }
+    .header-eyebrow {
+      color: var(--gold);
+      font-size: 9px;
+      letter-spacing: 3px;
+      margin-bottom: 4px;
+    }
+    .header-title {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+    .header-hint {
+      color: var(--dim);
+      font-size: 10px;
+      margin-top: 3px;
+    }
+
+    /* ── TABS ── */
+    #tab-bar {
+      display: flex;
+      gap: 0;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    #tab-bar::-webkit-scrollbar { display: none; }
+
+    .tab-btn {
+      flex: 0 0 auto;
+      padding: 12px 16px;
+      font-family: var(--font);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--dim);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: color 0.15s, border-color 0.15s;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .tab-btn.active {
+      color: var(--cream);
+      border-bottom-color: var(--set-color);
+    }
+
+    /* ── MAIN CONTENT ── */
+    #content {
+      padding: 20px 16px calc(var(--safe-bottom) + 80px);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* ── SET HEADER ── */
+    .set-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding-left: 12px;
+      border-left: 3px solid var(--set-color);
+      margin-bottom: 20px;
+    }
+    .set-title { font-size: 15px; font-weight: 700; }
+    .set-count { color: var(--muted); font-size: 10px; margin-top: 3px; }
+
+    /* ── EXERCISE CARDS ── */
+    .exercise-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .exercise-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px 12px 10px;
+      position: relative;
+    }
+    .exercise-card.editing {
+      border-color: var(--set-color);
+    }
+
+    .ex-row-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+    .ex-num {
+      color: var(--dim2);
+      font-size: 10px;
+      min-width: 16px;
+      padding-top: 3px;
+      flex-shrink: 0;
+    }
+    .ex-name {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--cream);
+      line-height: 1.4;
+      cursor: text;
+      border-radius: 3px;
+      padding: 2px 4px;
+      margin: -2px -4px;
+      min-height: 24px;
+    }
+    .ex-name:hover { background: rgba(212,160,23,0.08); }
+
+    .ex-row-meta {
+      display: flex;
+      gap: 8px;
+      margin-left: 26px;
+      flex-wrap: wrap;
+    }
+    .ex-sets-pill {
+      background: rgba(212,160,23,0.12);
+      border: 1px solid rgba(212,160,23,0.25);
+      color: var(--gold);
+      font-size: 10px;
+      border-radius: 3px;
+      padding: 3px 7px;
+      cursor: text;
+      white-space: nowrap;
+    }
+    .ex-sets-pill:hover { background: rgba(212,160,23,0.2); }
+
+    .ex-notes {
+      color: var(--muted);
+      font-size: 10px;
+      padding: 3px 6px;
+      cursor: text;
+      border-radius: 3px;
+      flex: 1;
+      min-width: 60px;
+    }
+    .ex-notes:hover { background: rgba(212,160,23,0.08); }
+    .ex-notes.empty { color: var(--dim2); font-style: italic; }
+
+    /* Controls */
+    .ex-controls {
+      display: flex;
+      gap: 6px;
+      margin-left: 26px;
+      margin-top: 8px;
+    }
+    .ctrl-btn {
+      background: transparent;
+      border: 1px solid var(--border2);
+      color: var(--muted);
+      font-family: var(--font);
+      font-size: 12px;
+      padding: 5px 10px;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.1s;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .ctrl-btn:active { background: var(--bg3); transform: scale(0.96); }
+    .ctrl-btn:disabled { opacity: 0.25; pointer-events: none; }
+    .ctrl-btn.del { color: var(--red); border-color: rgba(224,82,82,0.3); }
+    .ctrl-btn.del:active { background: rgba(224,82,82,0.1); }
+
+    /* Inline edit input */
+    .inline-input {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--gold);
+      outline: none;
+      color: var(--cream);
+      font-family: var(--font);
+      font-size: inherit;
+      font-weight: inherit;
+      width: 100%;
+      padding: 2px 0;
+    }
+
+    /* ── ADD EXERCISE ── */
+    .add-btn {
+      margin-top: 12px;
+      width: 100%;
+      background: transparent;
+      border: 1px dashed rgba(212,160,23,0.3);
+      color: var(--gold);
+      font-family: var(--font);
+      font-size: 11px;
+      letter-spacing: 1px;
+      padding: 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .add-btn:active { background: rgba(212,160,23,0.06); border-color: var(--gold); }
+
+    /* ── OVERVIEW ── */
+    #overview {
+      margin-top: 36px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+    .overview-label {
+      color: var(--dim2);
+      font-size: 9px;
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+    }
+    .overview-list { display: flex; flex-direction: column; gap: 6px; }
+    .overview-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.1s, border-color 0.1s;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .overview-item.active { background: var(--bg3); }
+    .overview-dot {
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .overview-text { flex: 1; min-width: 0; }
+    .overview-name { font-size: 12px; font-weight: 700; }
+    .overview-exercises {
+      font-size: 10px;
+      color: var(--dim);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .overview-count { color: var(--dim2); font-size: 10px; flex-shrink: 0; }
+
+    /* ── SAVE INDICATOR ── */
+    #save-indicator {
+      position: fixed;
+      bottom: calc(var(--safe-bottom) + 16px);
+      right: 16px;
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      color: var(--dim);
+      font-size: 9px;
+      letter-spacing: 1px;
+      padding: 6px 10px;
+      border-radius: 3px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    #save-indicator.show { opacity: 1; }
+    #save-indicator.saved { color: #4ADE80; border-color: rgba(74,222,128,0.3); }
+  </style>
+</head>
+<body>
+
+<div id="app-header">
+  <div class="header-eyebrow">PJMJ TRAINING SYSTEM</div>
+  <div class="header-title">GYM SPLIT</div>
+  <div class="header-hint">Tap to edit · arrows to reorder · auto-saves</div>
+</div>
+
+<div id="tab-bar"></div>
+
+<div id="content">
+  <div id="set-view"></div>
+  <div id="overview"></div>
+</div>
+
+<div id="save-indicator">SAVED</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+const DEFAULT_SETS = [
+  {
+    id: 1, name: "SET 1 — Pull + Triceps", color: "#4A90D9",
+    exercises: [
+      { id: 1,  name: "Single Arm Cable Warmup (Rotator)",       sets: "3 x 8–10", notes: "Light, focus on ROM" },
+      { id: 2,  name: "Single Arm Lat Pulldown (Heavy)",         sets: "3 x 5–6",  notes: "" },
+      { id: 3,  name: "Eagle Chest Supported Row",               sets: "3 x 6–8",  notes: "" },
+      { id: 4,  name: "Seated Small Handle Row",                 sets: "3 x 6–8",  notes: "" },
+      { id: 5,  name: "Cable Pullovers",                         sets: "3 x 8–10", notes: "Go light, full stretch" },
+      { id: 6,  name: "Tricep Pushdowns",                        sets: "3 x 6–8",  notes: "" },
+      { id: 7,  name: "Single Arm Overhead Tricep Extension",    sets: "3 x 6–8",  notes: "" },
+      { id: 8,  name: "Cable Tricep Kickbacks",                  sets: "3 x 8–10", notes: "Optional finisher" },
+    ]
+  },
+  {
+    id: 2, name: "SET 2 — Push + Arms", color: "#E8693A",
+    exercises: [
+      { id: 9,  name: "Plate Loaded Press (Warmup then Heavy)",  sets: "4 x 5–6",  notes: "40 warm, then work sets" },
+      { id: 10, name: "Close Grip Chest Press (Tricep focus)",   sets: "3 x 6–8",  notes: "" },
+      { id: 11, name: "Seated Lateral Raise (Machine/Cable)",    sets: "3 x 8–10", notes: "" },
+      { id: 12, name: "Cable Chest Fly",                         sets: "3 x 8–10", notes: "SS lighter weight to failure" },
+      { id: 13, name: "EZ Bar / Barbell Curl",                   sets: "3 x 6–8",  notes: "" },
+      { id: 14, name: "Heavy Hammer Curls",                      sets: "3 x 6–8",  notes: "" },
+      { id: 15, name: "Incline DB Curl",                         sets: "3 x 8–10", notes: "Optional finisher" },
+    ]
+  },
+  {
+    id: 3, name: "SET 3 — Chest & Back", color: "#8B5CF6",
+    exercises: [
+      { id: 16, name: "DB Row (Heavy, Chest Supported)",         sets: "3 x 5–6",  notes: "Ultra heavy" },
+      { id: 17, name: "Plate Loaded Row / Eagle Row",            sets: "3 x 5–6",  notes: "Ultra heavy" },
+      { id: 18, name: "Plate Loaded Press",                      sets: "3 x 5–6",  notes: "Ultra heavy" },
+      { id: 19, name: "Cable Chest Fly",                         sets: "3 x 8–10", notes: "SS to failure" },
+      { id: 20, name: "EZ Bar Curl",                             sets: "3 x 6–8",  notes: "" },
+      { id: 21, name: "Tricep Pushdowns",                        sets: "3 x 6–8",  notes: "" },
+      { id: 22, name: "Hammer Curls",                            sets: "3 x 6–8",  notes: "Superset with above" },
+    ]
+  },
+  {
+    id: 4, name: "SET 4 — Shoulders + Back + Chest", color: "#10B981",
+    exercises: [
+      { id: 23, name: "Standing Lateral Raise",                  sets: "4 x 8–10", notes: "" },
+      { id: 24, name: "Seated Lateral Raise (Cable/Machine)",    sets: "3 x 8–10", notes: "Chest supported if available" },
+      { id: 25, name: "Chest Supported Shoulder Press",          sets: "3 x 6–8",  notes: "" },
+      { id: 26, name: "Savage Cable / Face Pull",                sets: "3 x 8–10", notes: "" },
+      { id: 27, name: "Seated Small Handle Row",                 sets: "2 x 6–8",  notes: "Back hit" },
+      { id: 28, name: "Plate Loaded Press",                      sets: "2 x 6–8",  notes: "Chest hit" },
+      { id: 29, name: "Single Arm Lat Pulldown",                 sets: "2 x 6–8",  notes: "Optional back finisher" },
+    ]
+  },
+  {
+    id: 5, name: "SET 5 — Legs", color: "#F59E0B",
+    exercises: [
+      { id: 30, name: "5 Min Walk Warmup",                       sets: "—",         notes: "Treadmill" },
+      { id: 31, name: "Hip Abductor",                            sets: "3 x 8–10", notes: "Stack" },
+      { id: 32, name: "Standing RDL (Hamstring focus)",          sets: "3 x 6–8",  notes: "" },
+      { id: 33, name: "Swing Leg Press",                         sets: "3 x 6–8",  notes: "" },
+      { id: 34, name: "Barbell RDL",                             sets: "3 x 5–6",  notes: "" },
+      { id: 35, name: "Seated / Suitcase RDL",                   sets: "3 x 6–8",  notes: "" },
+      { id: 36, name: "Leg Extension",                           sets: "3 x 8–10", notes: "" },
+      { id: 37, name: "10–15 Min Incline Walk Warm Down",        sets: "—",         notes: "" },
+    ]
+  }
+];
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let sets = [];
+let activeSetId = 1;
+let nextId = 200;
+let editingState = null; // { exId, field }
+let saveTimer = null;
+
+function loadData() {
+  try {
+    const saved = localStorage.getItem('gym-split-v1');
+    if (saved) {
+      sets = JSON.parse(saved);
+    } else {
+      sets = JSON.parse(JSON.stringify(DEFAULT_SETS));
+    }
+  } catch(e) {
+    sets = JSON.parse(JSON.stringify(DEFAULT_SETS));
+  }
+}
+
+function saveData() {
+  try {
+    localStorage.setItem('gym-split-v1', JSON.stringify(sets));
+    showSaveIndicator();
+  } catch(e) {}
+}
+
+function showSaveIndicator() {
+  const el = document.getElementById('save-indicator');
+  el.classList.add('show', 'saved');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => { el.classList.remove('show', 'saved'); }, 1200);
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function getSet(id) { return sets.find(s => s.id === id); }
+function getEx(setId, exId) { return getSet(setId)?.exercises.find(e => e.id === exId); }
+
+function shortName(name) {
+  const parts = name.split('—');
+  return parts[0].trim();
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function render() {
+  renderTabs();
+  renderSetView();
+  renderOverview();
+}
+
+function renderTabs() {
+  const bar = document.getElementById('tab-bar');
+  bar.innerHTML = sets.map(s => `
+    <button class="tab-btn ${s.id === activeSetId ? 'active' : ''}"
+      style="--set-color: ${s.color}"
+      onclick="switchSet(${s.id})"
+    >${shortName(s.name)}</button>
+  `).join('');
+}
+
+function renderSetView() {
+  const container = document.getElementById('set-view');
+  const s = getSet(activeSetId);
+  if (!s) return;
+
+  document.documentElement.style.setProperty('--set-color', s.color);
+
+  container.innerHTML = `
+    <div class="set-header">
+      <div>
+        <div class="set-title">${s.name}</div>
+        <div class="set-count">${s.exercises.length} exercises</div>
+      </div>
+    </div>
+    <div class="exercise-list" id="ex-list">
+      ${s.exercises.map((ex, idx) => renderExCard(s, ex, idx)).join('')}
+    </div>
+    <button class="add-btn" onclick="addExercise(${s.id})">+ ADD EXERCISE</button>
+  `;
+
+  // Re-attach editing if needed
+  if (editingState) {
+    const { exId, field } = editingState;
+    attachInlineEdit(s.id, exId, field);
+  }
+}
+
+function renderExCard(s, ex, idx) {
+  const isEditing = editingState?.exId === ex.id;
+  const nameContent = (isEditing && editingState.field === 'name')
+    ? `<input class="inline-input" id="input-name-${ex.id}" value="${esc(ex.name)}" />`
+    : `<span class="ex-name" onclick="startEdit(${s.id},${ex.id},'name')">${esc(ex.name)}</span>`;
+
+  const setsContent = (isEditing && editingState.field === 'sets')
+    ? `<input class="inline-input" id="input-sets-${ex.id}" style="width:90px" value="${esc(ex.sets)}" />`
+    : `<span class="ex-sets-pill" onclick="startEdit(${s.id},${ex.id},'sets')">${esc(ex.sets)}</span>`;
+
+  const notesContent = (isEditing && editingState.field === 'notes')
+    ? `<input class="inline-input" id="input-notes-${ex.id}" style="font-size:10px" value="${esc(ex.notes)}" placeholder="add note..." />`
+    : `<span class="ex-notes ${ex.notes ? '' : 'empty'}" onclick="startEdit(${s.id},${ex.id},'notes')">${ex.notes ? esc(ex.notes) : 'add note...'}</span>`;
+
+  return `
+    <div class="exercise-card ${isEditing ? 'editing' : ''}" id="card-${ex.id}" style="${isEditing ? `border-color:${s.color}` : ''}">
+      <div class="ex-row-top">
+        <span class="ex-num">${idx + 1}</span>
+        ${nameContent}
+      </div>
+      <div class="ex-row-meta">
+        ${setsContent}
+        ${notesContent}
+      </div>
+      <div class="ex-controls">
+        <button class="ctrl-btn" onclick="moveEx(${s.id},${ex.id},-1)" ${idx === 0 ? 'disabled' : ''}>↑</button>
+        <button class="ctrl-btn" onclick="moveEx(${s.id},${ex.id},1)" ${idx === s.exercises.length-1 ? 'disabled' : ''}>↓</button>
+        <button class="ctrl-btn del" onclick="deleteEx(${s.id},${ex.id})">remove</button>
+        ${isEditing ? `<button class="ctrl-btn" style="color:#4ADE80;border-color:rgba(74,222,128,0.3)" onclick="commitEdit()">done</button>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function renderOverview() {
+  const el = document.getElementById('overview');
+  el.innerHTML = `
+    <div class="overview-label">FULL SPLIT OVERVIEW</div>
+    <div class="overview-list">
+      ${sets.map(s => `
+        <div class="overview-item ${s.id === activeSetId ? 'active' : ''}"
+          style="${s.id === activeSetId ? `border-color:${s.color}40` : ''}"
+          onclick="switchSet(${s.id})"
+        >
+          <div class="overview-dot" style="background:${s.color}"></div>
+          <div class="overview-text">
+            <div class="overview-name">${s.name}</div>
+            <div class="overview-exercises">${s.exercises.map(e => e.name).join(' · ')}</div>
+          </div>
+          <div class="overview-count">${s.exercises.length} ex</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// ── ACTIONS ───────────────────────────────────────────────────────────────────
+function switchSet(id) {
+  commitEdit();
+  activeSetId = id;
+  render();
+  document.getElementById('content').scrollTop = 0;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Scroll active tab into view
+  setTimeout(() => {
+    const tabs = document.querySelectorAll('.tab-btn');
+    tabs.forEach(t => { if (t.classList.contains('active')) t.scrollIntoView({ inline: 'center', behavior: 'smooth' }); });
+  }, 50);
+}
+
+function startEdit(setId, exId, field) {
+  commitEdit();
+  editingState = { setId, exId, field };
+  renderSetView();
+  attachInlineEdit(setId, exId, field);
+}
+
+function attachInlineEdit(setId, exId, field) {
+  const inputId = `input-${field}-${exId}`;
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  input.focus();
+  input.setSelectionRange(input.value.length, input.value.length);
+  input.addEventListener('blur', () => setTimeout(commitEdit, 100));
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); commitEdit(); }
+    if (e.key === 'Escape') { editingState = null; renderSetView(); }
+  });
+}
+
+function commitEdit() {
+  if (!editingState) return;
+  const { setId, exId, field } = editingState;
+  const inputId = `input-${field}-${exId}`;
+  const input = document.getElementById(inputId);
+  if (input) {
+    const ex = getEx(setId, exId);
+    if (ex) ex[field] = input.value.trim() || ex[field];
+  }
+  editingState = null;
+  saveData();
+  renderSetView();
+  renderOverview();
+}
+
+function addExercise(setId) {
+  commitEdit();
+  const s = getSet(setId);
+  if (!s) return;
+  const newEx = { id: nextId++, name: "New Exercise", sets: "3 x 6–8", notes: "" };
+  s.exercises.push(newEx);
+  saveData();
+  renderSetView();
+  renderOverview();
+  // Auto-open name edit
+  setTimeout(() => startEdit(setId, newEx.id, 'name'), 50);
+}
+
+function deleteEx(setId, exId) {
+  commitEdit();
+  const s = getSet(setId);
+  if (!s) return;
+  if (s.exercises.length <= 1) return; // don't delete last
+  s.exercises = s.exercises.filter(e => e.id !== exId);
+  saveData();
+  renderSetView();
+  renderOverview();
+}
+
+function moveEx(setId, exId, dir) {
+  commitEdit();
+  const s = getSet(setId);
+  if (!s) return;
+  const idx = s.exercises.findIndex(e => e.id === exId);
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= s.exercises.length) return;
+  [s.exercises[idx], s.exercises[newIdx]] = [s.exercises[newIdx], s.exercises[idx]];
+  saveData();
+  renderSetView();
+}
+
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+loadData();
+render();
+</script>
+
+<!-- PWA Service Worker -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+</script>
+
+</body>
+</html>
